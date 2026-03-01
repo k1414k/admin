@@ -44,4 +44,4 @@
   EXPOSE 3003
   
   # Nuxt 3 の実行コマンド（server/index.mjs を叩く）
-  CMD ["node", ".output/server/index.mjs"]
+  CMD ["node", "server/index.mjs"]
