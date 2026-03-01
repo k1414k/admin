@@ -134,8 +134,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
-import { useAuthStore } from '~/stores/auth'
-import { ADMIN_NAV_ITEMS } from '~/types/navigation'
+import { useAuthStore } from '@/stores/auth'
+import { ADMIN_NAV_ITEMS } from '@/types/navigation'
 
 const router = useRouter()
 const theme = useTheme()

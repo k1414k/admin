@@ -14,41 +14,9 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     to: '/dashboard'
   },
   {
-    title: '管理',
-    icon: 'mdi-cog-outline',
-    children: [
-      {
-        title: 'ユーザー',
-        icon: 'mdi-account-multiple-outline',
-        to: '/users'
-      },
-      {
-        title: '商品',
-        icon: 'mdi-package-variant-outline',
-        to: '/items'
-      },
-      {
-        title: '注文',
-        icon: 'mdi-cart-outline',
-        to: '/orders'
-      }
-    ]
-  },
-  {
-    title: 'レポート',
-    icon: 'mdi-chart-line-outline',
-    children: [
-      {
-        title: '売上分析',
-        icon: 'mdi-chart-bar-outline',
-        to: '/reports/sales'
-      },
-      {
-        title: 'ユーザー分析',
-        icon: 'mdi-chart-pie-outline',
-        to: '/reports/users'
-      }
-    ]
+    title: '商品',
+    icon: 'mdi-package-variant-outline',
+    to: '/items'
   },
   {
     title: '設定',
