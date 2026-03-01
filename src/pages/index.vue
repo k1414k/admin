@@ -23,8 +23,8 @@ import AdminLayout from '~/components/layouts/AdminLayout.vue'
 const router = useRouter()
 const isRedirecting = ref(true)
 
-onMounted(() => {
-  router.replace('/items')
-})
+// onMounted(() => {
+//   router.replace('/items')
+// })
 </script>
 
