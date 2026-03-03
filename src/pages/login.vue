@@ -12,7 +12,7 @@
             </v-card-title>
 
             <!-- フォーム -->
-            <v-card-text class="pa-8">
+            <v-card-text class="pa-8 mt-4">
               <v-form @submit.prevent="handleLogin">
                 <v-text-field
                   v-model="form.email"
@@ -73,8 +73,8 @@
               <v-card class="bg-blue-50 border" flat>
                 <v-card-text class="text-caption">
                   <p class="font-semibold mb-2">デモログイン情報:</p>
-                  <p><strong>メール:</strong> admin@example.com</p>
-                  <p><strong>パス:</strong> password123</p>
+                  <p><strong>メール:</strong> 現在未公開</p>
+                  <p><strong>パス:</strong> 現在未公開</p>
                 </v-card-text>
               </v-card>
             </v-card-text>
@@ -82,7 +82,7 @@
             <!-- フッター -->
             <v-card-actions class="pa-8 text-center justify-center">
               <p class="text-caption text-gray-600">
-                © 2024 Admin Management System
+                © 2026 Admin Management System
               </p>
             </v-card-actions>
           </v-card>
