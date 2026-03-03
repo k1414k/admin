@@ -18,13 +18,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AdminLayout from '~/components/layouts/AdminLayout.vue'
+import AdminLayout from '@/components/layouts/AdminLayout.vue'
 
 const router = useRouter()
 const isRedirecting = ref(true)
 
-// onMounted(() => {
-//   router.replace('/items')
-// })
+onMounted(() => {
+  router.replace('/login')
+})
 </script>
 
