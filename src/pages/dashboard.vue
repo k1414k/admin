@@ -123,10 +123,10 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useDashboardStore } from '~/stores/dashboard'
-import AdminLayout from '~/components/layouts/AdminLayout.vue'
-import StatCard from '~/components/common/StatCard.vue'
-import DataTable from '~/components/common/DataTable.vue'
+import { useDashboardStore } from '@/stores/dashboard'
+import AdminLayout from '@/components/layouts/AdminLayout.vue'
+import StatCard from '@/components/common/StatCard.vue'
+import DataTable from '@/components/common/DataTable.vue'
 
 const dashboardStore = useDashboardStore()
 

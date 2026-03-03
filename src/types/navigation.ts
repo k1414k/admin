@@ -22,5 +22,20 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     title: '設定',
     icon: 'mdi-sliders-vertical',
     to: '/settings'
+  },
+  {
+    title: 'カテゴリ管理',
+    icon: 'mdi-list-box-outline',
+    to: '/categories'
+  },
+  {
+    title: '注文管理',
+    icon: 'mdi-order-bool-ascending-variant',
+    to: '/orders'
+  },
+  {
+    title: 'ユーザー管理',
+    icon: 'mdi-users-outline',
+    to: '/users'
   }
 ];
