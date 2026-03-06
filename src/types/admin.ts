@@ -3,7 +3,7 @@ export interface AdminUser {
   id: number;
   email: string;
   name: string;
-  role: 'admin' | 'moderator' | 'viewer';
+  role: 'user' | 'admin' | 'super_admin';
   avatar?: string;
   lastLogin?: string;
   isActive: boolean;

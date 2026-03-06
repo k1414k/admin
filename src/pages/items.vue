@@ -37,6 +37,7 @@ import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '~/components/layouts/AdminLayout.vue'
 import DataTable from '~/components/common/DataTable.vue'
 import type { Item } from '~/types/admin'
+import { debugLog } from '@/lib/debugLog'
 
 type ApiItem = {
   id: number
@@ -85,10 +86,35 @@ const fetchItems = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H3',
+      location: 'admin/src/pages/items.vue:fetchItems',
+      message: 'items_fetch_start',
+      data: {
+        origin: process.client ? window.location.origin : 'server',
+        apiBase,
+        url: `${apiBase}/auction/v1/items`
+      }
+    })
+    // #endregion
     const data = await $fetch<ApiItem[]>(`${apiBase}/auction/v1/items`)
     items.value = data.map(mapApiToItem)
   } catch (e) {
     console.error(e)
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H3_H4',
+      location: 'admin/src/pages/items.vue:fetchItems:catch',
+      message: 'items_fetch_failed',
+      data: {
+        origin: process.client ? window.location.origin : 'server',
+        apiBase,
+        errorMessage: (e as any)?.message || null,
+        errorStatus: (e as any)?.status || null
+      }
+    })
+    // #endregion
     errorMessage.value = '商品一覧の取得に失敗しました。'
   } finally {
     isLoading.value = false

@@ -94,8 +94,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '~/stores/auth'
+import { useAuthStore } from '@/stores/auth'
+import { debugLog } from '@/lib/debugLog'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -135,13 +135,54 @@ const handleLogin = async () => {
 
   isLoading.value = true
   try {
-    // デモ用: 簡単な認証
-    if (form.value.email === 'admin@example.com' && form.value.password === 'password123') {
-      await authStore.login(form.value.email, form.value.password)
-      router.push('/dashboard')
-    } else {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H1_H2_H3',
+      location: 'admin/src/pages/login.vue:handleLogin',
+      message: 'login_attempt',
+      data: {
+        origin: process.client ? window.location.origin : 'server',
+        apiBase: (useRuntimeConfig().public.apiBase as string) || null
+      }
+    })
+    // #endregion
+
+    await authStore.login(form.value.email, form.value.password)
+
+    if (!authStore.isLoggedIn) {
       errors.value.general = 'メールアドレスまたはパスワードが正しくありません'
+      return
     }
+
+    const role = authStore.currentUser?.role
+    if (role !== 'admin' && role !== 'super_admin') {
+      await authStore.logout()
+      errors.value.general = '管理者アカウントではありません'
+      return
+    }
+
+    router.push('/dashboard')
+  } catch (e: any) {
+    console.error(e)
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H3_H4_H5',
+      location: 'admin/src/pages/login.vue:catch',
+      message: 'login_failed',
+      data: {
+        origin: process.client ? window.location.origin : 'server',
+        apiBase: (useRuntimeConfig().public.apiBase as string) || null,
+        errorName: e?.name || null,
+        errorMessage: e?.message || null,
+        errorStatus: e?.status || e?.response?.status || null
+      }
+    })
+    // #endregion
+    errors.value.general =
+      e?.data?.errors?.[0] ||
+      e?.data?.error ||
+      e?.message ||
+      'ログインに失敗しました'
   } finally {
     isLoading.value = false
   }
