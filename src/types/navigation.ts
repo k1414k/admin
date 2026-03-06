@@ -14,9 +14,19 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     to: '/dashboard'
   },
   {
+    title: 'ユーザー',
+    icon: 'mdi-account-multiple-outline',
+    to: '/users'
+  },
+  {
     title: '商品',
     icon: 'mdi-package-variant-outline',
     to: '/items'
+  },
+  {
+    title: '注文',
+    icon: 'mdi-cart-outline',
+    to: '/orders'
   },
   {
     title: '設定',

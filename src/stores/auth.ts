@@ -5,67 +5,204 @@ interface AuthState {
   user: AdminUser | null
   isAuthenticated: boolean
   isLoading: boolean
+  token: {
+    'access-token': string
+    client: string
+    uid: string
+  } | null
 }
+
+type LoginResponseBody = {
+  data?: {
+    id?: number
+    email?: string
+    name?: string
+    nickname?: string
+    role?: AdminUser['role']
+  }
+}
+
+type MyProfileResponse = {
+  name?: string
+  nickname?: string
+  email?: string
+  role?: AdminUser['role']
+}
+
+const STORAGE_KEY = 'admin_auth'
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
     isAuthenticated: false,
-    isLoading: false
+    isLoading: false,
+    token: null
   }),
 
   getters: {
     currentUser: (state) => state.user,
-    isLoggedIn: (state) => state.isAuthenticated
+    isLoggedIn: (state) => state.isAuthenticated,
+    authHeaders: (state) => {
+      if (!state.token) return {}
+      return {
+        'access-token': state.token['access-token'],
+        client: state.token.client,
+        uid: state.token.uid
+      }
+    }
   },
 
   actions: {
+    restoreFromStorage() {
+      if (!process.client) return
+
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (!raw) return
+
+      try {
+        const parsed = JSON.parse(raw) as { user: AdminUser; token: AuthState['token'] }
+        this.user = parsed.user
+        this.token = parsed.token
+        this.isAuthenticated = !!parsed.user && !!parsed.token
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    },
+
+    persistToStorage() {
+      if (!process.client) return
+      if (!this.user || !this.token) return
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: this.user, token: this.token }))
+    },
+
+    clearStorage() {
+      if (!process.client) return
+      localStorage.removeItem(STORAGE_KEY)
+    },
+
     async login(email: string, password: string) {
       this.isLoading = true
       try {
-        // API呼び出し例（実装時に置き換え）
-        // const response = await $fetch('/api/admin/login', {
-        //   method: 'POST',
-        //   body: { email, password }
-        // })
-        
-        // デモ用：モックユーザー
+        const config = useRuntimeConfig()
+        const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+
+        const res = await $fetch.raw<LoginResponseBody>(`${apiBase}/auth/sign_in`, {
+          method: 'POST',
+          body: { email, password },
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+          }
+        })
+
+        const accessToken = String(res.headers.get('access-token') || '')
+        const client = String(res.headers.get('client') || '')
+        const uid = String(res.headers.get('uid') || '')
+
+        if (!accessToken || !client || !uid) {
+          throw new Error('Missing auth headers')
+        }
+
+        this.token = {
+          'access-token': accessToken,
+          client,
+          uid
+        }
+
+        // role 判定はサーバー側の current_user を信頼する（sign_in のボディに含まれない構成でも動く）
+        const profile = await $fetch<MyProfileResponse>(`${apiBase}/auction/v1/user`, {
+          headers: {
+            ...this.authHeaders,
+            Accept: 'application/json'
+          }
+        })
+
+        const role = (profile.role || res._data?.data?.role || 'user') as AdminUser['role']
+        const name =
+          (profile.nickname || profile.name || res._data?.data?.nickname || res._data?.data?.name || email) as string
+        const id = Number(res._data?.data?.id || 0)
+
         this.user = {
-          id: 1,
-          email,
-          name: 'Admin User',
-          role: 'admin',
+          id: id || 0,
+          email: profile.email || email,
+          name,
+          role,
           isActive: true,
           lastLogin: new Date().toISOString()
         }
-        this.isAuthenticated = true
 
-        // localStorage に保存（セッション保持用）
-        if (process.client) {
-          localStorage.setItem('auth_user', JSON.stringify(this.user))
-        }
+        this.isAuthenticated = true
+        this.persistToStorage()
       } finally {
         this.isLoading = false
       }
     },
 
     async logout() {
-      this.user = null
-      this.isAuthenticated = false
+      try {
+        const config = useRuntimeConfig()
+        const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
 
-      // localStorage からクリア
-      if (process.client) {
-        localStorage.removeItem('auth_user')
+        if (this.token) {
+          await $fetch(`${apiBase}/auth/sign_out`, {
+            method: 'DELETE',
+            headers: {
+              ...this.authHeaders,
+              Accept: 'application/json'
+            }
+          })
+        }
+      } catch {
+        // best-effort
+      } finally {
+        this.user = null
+        this.token = null
+        this.isAuthenticated = false
+        this.clearStorage()
       }
     },
 
     async checkSession() {
-      // セッション確認処理
-      // const response = await $fetch('/api/admin/me')
-      // if (response) {
-      //   this.user = response
-      //   this.isAuthenticated = true
-      // }
+      this.restoreFromStorage()
+
+      if (!this.token) {
+        this.user = null
+        this.isAuthenticated = false
+        return
+      }
+
+      try {
+        const config = useRuntimeConfig()
+        const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+
+        const res = await $fetch.raw(`${apiBase}/auth/validate_token`, {
+          method: 'GET',
+          headers: {
+            ...this.authHeaders,
+            Accept: 'application/json'
+          }
+        })
+
+        const nextAccessToken = res.headers.get('access-token')
+        const nextClient = res.headers.get('client')
+        const nextUid = res.headers.get('uid')
+
+        if (nextAccessToken && nextClient && nextUid) {
+          this.token = {
+            'access-token': String(nextAccessToken),
+            client: String(nextClient),
+            uid: String(nextUid)
+          }
+          this.persistToStorage()
+        }
+
+        this.isAuthenticated = true
+      } catch {
+        this.user = null
+        this.token = null
+        this.isAuthenticated = false
+        this.clearStorage()
+      }
     }
   }
 })
