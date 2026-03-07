@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { AdminUser } from '@types/admin'
+import type { AdminUser } from '@/types/admin'
 
 interface AuthState {
   user: AdminUser | null
@@ -42,7 +42,7 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     currentUser: (state) => state.user,
     isLoggedIn: (state) => state.isAuthenticated,
-    authHeaders: (state) => {
+    authHeaders: (state): Record<string, string> => {
       if (!state.token) return {}
       return {
         'access-token': state.token['access-token'],
@@ -84,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
       this.isLoading = true
       try {
         const config = useRuntimeConfig()
-        const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+        const apiBase = config.public.apiBase as string
 
         const res = await $fetch.raw<LoginResponseBody>(`${apiBase}/auth/sign_in`, {
           method: 'POST',
@@ -141,7 +141,7 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       try {
         const config = useRuntimeConfig()
-        const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+        const apiBase = config.public.apiBase as string
 
         if (this.token) {
           await $fetch(`${apiBase}/auth/sign_out`, {
@@ -173,7 +173,7 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const config = useRuntimeConfig()
-        const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+        const apiBase = config.public.apiBase as string
 
         const res = await $fetch.raw(`${apiBase}/auth/validate_token`, {
           method: 'GET',

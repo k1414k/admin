@@ -26,6 +26,14 @@
               {{ statusText(item.status) }}
             </v-chip>
           </template>
+          <template #[`item.image`]="{ item }">
+            <div class="d-flex align-center">
+              <v-avatar v-if="item.image" size="40">
+                <v-img :src="item.image" alt="item image" cover />
+              </v-avatar>
+              <span v-else>-</span>
+            </div>
+          </template>
         </DataTable>
       </v-col>
     </v-row>
@@ -38,6 +46,7 @@ import AdminLayout from '~/components/layouts/AdminLayout.vue'
 import DataTable from '~/components/common/DataTable.vue'
 import type { Item } from '~/types/admin'
 import { debugLog } from '@/lib/debugLog'
+import { useAuthStore } from '@/stores/auth'
 
 type ApiItem = {
   id: number
@@ -46,17 +55,22 @@ type ApiItem = {
   price: number
   trading_status: string
   user_nickname?: string
+  category_name?: string
+  image?: string | null
   created_at: string
   updated_at: string
 }
 
+const authStore = useAuthStore()
 const config = useRuntimeConfig()
-const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+const apiBase = config.public.apiBase as string
 
 const headers = [
   { title: '商品名', key: 'title' },
   { title: '価格', key: 'price', width: 120 },
   { title: 'ステータス', key: 'status', width: 100 },
+  { title: 'カテゴリ', key: 'category', width: 120 },
+  { title: '画像', key: 'image', width: 100 },
   { title: '出品者', key: 'seller', width: 120 },
   { title: '登録日', key: 'createdAt', width: 120 }
 ]
@@ -70,9 +84,10 @@ const mapApiToItem = (api: ApiItem): Item => ({
   title: api.title,
   description: api.description || '',
   price: api.price,
-  category: '',
+  category: api.category_name || '-',
   status: api.trading_status === 'sold' ? 'sold' : 'active',
   seller: api.user_nickname || '-',
+  image: api.image || undefined,
   createdAt: api.created_at,
   updatedAt: api.updated_at
 })
@@ -94,11 +109,16 @@ const fetchItems = async () => {
       data: {
         origin: process.client ? window.location.origin : 'server',
         apiBase,
-        url: `${apiBase}/auction/v1/items`
+        url: `${apiBase}/admin/v1/items`
       }
     })
     // #endregion
-    const data = await $fetch<ApiItem[]>(`${apiBase}/auction/v1/items`)
+    const data = await $fetch<ApiItem[]>(`${apiBase}/admin/v1/items`, {
+      headers: {
+        ...authStore.authHeaders,
+        Accept: 'application/json'
+      }
+    })
     items.value = data.map(mapApiToItem)
   } catch (e) {
     console.error(e)

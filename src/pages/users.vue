@@ -197,7 +197,7 @@ type UsersIndexResponse = {
 
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
-const apiBase = (config.public.apiBase as string) || 'http://localhost:3000'
+const apiBase = config.public.apiBase as string
 
 const headers = [
   { title: 'ID', key: 'id', width: 80 },
@@ -317,7 +317,7 @@ const fetchUsers = async () => {
 
     const data = await $fetch<UsersIndexResponse>(`${apiBase}/admin/v1/users`, {
       headers: {
-        ...authStore.authHeaders,
+        ...(authStore.authHeaders as HeadersInit),
         Accept: 'application/json'
       }
     })

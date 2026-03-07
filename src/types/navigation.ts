@@ -19,6 +19,11 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     to: '/users'
   },
   {
+    title: 'カテゴリ',
+    icon: 'mdi-tag-outline',
+    to: '/categories'
+  },
+  {
     title: '商品',
     icon: 'mdi-package-variant-outline',
     to: '/items'
