@@ -1,5 +1,8 @@
 <template>
   <AdminLayout>
+    <div class="text-gray-600 p-4 my-3">
+      デモアカウントは変更できません
+    </div>
     <v-row>
       <v-col cols="12" lg="8">
         <v-card class="elevation-0">
@@ -10,7 +13,6 @@
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="名前"
-                  value="Admin User"
                   variant="outlined"
                   readonly
                 />
@@ -19,7 +21,6 @@
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="メールアドレス"
-                  value="admin@example.com"
                   variant="outlined"
                   readonly
                 />
@@ -28,7 +29,6 @@
               <v-col cols="12">
                 <v-text-field
                   label="ロール"
-                  value="管理者"
                   variant="outlined"
                   readonly
                 />

@@ -49,6 +49,15 @@ export interface User {
   orderCount: number;
 }
 
+// カテゴリ
+export interface Category {
+  id: number;
+  name: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // 注文
 export interface Order {
   id: number;

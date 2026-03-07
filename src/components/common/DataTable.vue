@@ -7,8 +7,19 @@
     class="elevation-0"
     @update:page="$emit('update:page', $event)"
   >
-    <!-- カスタムスロット -->
-    <slot />
+    <!-- 親から渡された item.xxx スロットを v-data-table に中継 -->
+    <template
+      v-for="header in slotHeaders"
+      :key="String(header.key)"
+      #[`item.${header.key}`]="slotProps"
+    >
+      <slot
+        :name="`item.${header.key}`"
+        :item="slotProps.item?.raw ?? slotProps.item"
+      >
+        {{ getCellValue(slotProps.item?.raw ?? slotProps.item, String(header.key)) }}
+      </slot>
+    </template>
 
     <!-- アクション列 -->
     <template v-if="showActions" #[`item.actions`]="{ item }">
@@ -16,12 +27,12 @@
         <v-btn
           icon="mdi-pencil"
           color="primary"
-          @click="$emit('edit', item)"
+          @click="$emit('edit', item.raw ?? item)"
         />
         <v-btn
           icon="mdi-delete"
           color="error"
-          @click="$emit('delete', item)"
+          @click="$emit('delete', item.raw ?? item)"
         />
       </v-btn-group>
     </template>
@@ -45,6 +56,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, any>">
+import { computed } from 'vue'
 import type { DataTableHeader } from 'vuetify'
 
 interface Props<T> {
@@ -55,7 +67,7 @@ interface Props<T> {
   showActions?: boolean
 }
 
-withDefaults(defineProps<Props<T>>(), {
+const props = withDefaults(defineProps<Props<T>>(), {
   loading: false,
   itemsPerPage: 10,
   showActions: true
@@ -63,9 +75,20 @@ withDefaults(defineProps<Props<T>>(), {
 
 defineEmits<{
   'update:page': [page: number]
-  'edit': [item: any]
-  'delete': [item: any]
+  'edit': [item: T]
+  'delete': [item: T]
 }>()
+
+const slotHeaders = computed(() =>
+  props.headers.filter((header) => {
+    const key = header.key
+    return typeof key === 'string' && key !== 'actions'
+  })
+)
+
+const getCellValue = (item: T, key: string) => {
+  return item?.[key]
+}
 </script>
 
 <style scoped>
