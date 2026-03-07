@@ -66,28 +66,10 @@
           <v-list>
             <v-list-item density="compact" prepend-icon="mdi-account-plus-outline">
               <v-list-item-title class="text-sm">
-                新規ユーザー登録
+                デバイスログイン
               </v-list-item-title>
               <v-list-item-subtitle class="text-xs">
-                2時間前
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <v-list-item density="compact" prepend-icon="mdi-package-outline">
-              <v-list-item-title class="text-sm">
-                新規商品追加
-              </v-list-item-title>
-              <v-list-item-subtitle class="text-xs">
-                4時間前
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <v-list-item density="compact" prepend-icon="mdi-shopping-outline">
-              <v-list-item-title class="text-sm">
-                注文完了
-              </v-list-item-title>
-              <v-list-item-subtitle class="text-xs">
-                8時間前
+                たった今
               </v-list-item-subtitle>
             </v-list-item>
           </v-list>
@@ -122,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useDashboardStore } from '~/stores/dashboard'
 import AdminLayout from '~/components/layouts/AdminLayout.vue'
 import StatCard from '~/components/common/StatCard.vue'
@@ -138,29 +120,7 @@ const orderHeaders = [
   { title: '日時', key: 'createdAt' }
 ]
 
-const recentOrders = [
-  {
-    id: 1,
-    itemTitle: 'サンプル商品1',
-    price: 12000,
-    status: 'completed',
-    createdAt: '2024-02-27 10:30'
-  },
-  {
-    id: 2,
-    itemTitle: 'サンプル商品2',
-    price: 8500,
-    status: 'pending',
-    createdAt: '2024-02-27 09:15'
-  },
-  {
-    id: 3,
-    itemTitle: 'サンプル商品3',
-    price: 15600,
-    status: 'completed',
-    createdAt: '2024-02-27 08:45'
-  }
-]
+const recentOrders = computed(() => dashboardStore.recentOrders)
 
 onMounted(async () => {
   await dashboardStore.fetchStats()

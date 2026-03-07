@@ -1,14 +1,30 @@
 import { defineStore } from 'pinia'
-import type { DashboardStats } from '@types/admin'
+import type { DashboardStats } from '@/types/admin'
+import { useAuthStore } from '@/stores/auth'
+
+interface DashboardOrderSummary {
+  id: number
+  itemTitle: string
+  price: number
+  status: string
+  createdAt: string
+}
 
 interface DashboardState {
   stats: DashboardStats | null
+  recentOrders: DashboardOrderSummary[]
   isLoading: boolean
+}
+
+interface DashboardResponse {
+  stats: DashboardStats
+  recent_orders: DashboardOrderSummary[]
 }
 
 export const useDashboardStore = defineStore('dashboard', {
   state: (): DashboardState => ({
     stats: null,
+    recentOrders: [],
     isLoading: false
   }),
 
@@ -20,22 +36,19 @@ export const useDashboardStore = defineStore('dashboard', {
     async fetchStats() {
       this.isLoading = true
       try {
-        // API呼び出し例
-        // const response = await $fetch('/api/admin/stats')
-        
-        // デモ用：モック統計
-        this.stats = {
-          totalUsers: 1250,
-          totalItems: 5843,
-          totalOrders: 892,
-          totalRevenue: 125000,
-          growthRate: {
-            users: 12.5,
-            items: 8.3,
-            orders: 15.2,
-            revenue: 18.7
+        const config = useRuntimeConfig()
+        const apiBase = config.public.apiBase as string
+        const authStore = useAuthStore()
+
+        const data = await $fetch<DashboardResponse>(`${apiBase}/admin/v1/dashboard`, {
+          headers: {
+            ...authStore.authHeaders,
+            Accept: 'application/json'
           }
-        }
+        })
+
+        this.stats = data.stats
+        this.recentOrders = data.recent_orders
       } finally {
         this.isLoading = false
       }
