@@ -5,11 +5,15 @@
         <h1 class="text-h5 font-bold">商品一覧</h1>
       </v-col>
     </v-row>
+
     <v-row v-if="errorMessage">
       <v-col cols="12">
-        <v-alert type="error" variant="tonal">{{ errorMessage }}</v-alert>
+        <v-alert type="error" variant="tonal">
+          {{ errorMessage }}
+        </v-alert>
       </v-col>
     </v-row>
+
     <v-row>
       <v-col cols="12">
         <DataTable
@@ -22,11 +26,13 @@
           <template #[`item.price`]="{ item }">
             ¥{{ Number(item.price).toLocaleString() }}
           </template>
+
           <template #[`item.status`]="{ item }">
             <v-chip :color="statusColor(item.status)" label size="small">
               {{ statusText(item.status) }}
             </v-chip>
           </template>
+
           <template #[`item.image`]="{ item }">
             <div class="d-flex align-center">
               <v-avatar v-if="item.image" size="40">
@@ -42,6 +48,7 @@
     <v-dialog v-model="deleteDialog" max-width="420">
       <v-card>
         <v-card-title>商品削除</v-card-title>
+
         <v-card-text>
           <p class="mb-2">
             「{{ deleteTarget?.title }}」を削除しますか？
@@ -50,11 +57,21 @@
             この操作は元に戻せません。
           </p>
         </v-card-text>
+
         <v-card-actions class="justify-end">
-          <v-btn variant="text" :disabled="isLoading" @click="closeDeleteDialog">
+          <v-btn
+            variant="text"
+            :disabled="isLoading"
+            @click="closeDeleteDialog"
+          >
             キャンセル
           </v-btn>
-          <v-btn color="error" :loading="isLoading" @click="deleteItem">
+
+          <v-btn
+            color="error"
+            :loading="isLoading"
+            @click="deleteItem"
+          >
             削除
           </v-btn>
         </v-card-actions>
@@ -64,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import AdminLayout from '~/components/layouts/AdminLayout.vue'
 import DataTable from '~/components/common/DataTable.vue'
 import type { Item } from '~/types/admin'
@@ -91,11 +108,12 @@ const apiBase = config.public.apiBase as string
 const headers = [
   { title: '商品名', key: 'title' },
   { title: '価格', key: 'price', width: 120 },
-  { title: 'ステータス', key: 'status', width: 100 },
-  { title: 'カテゴリ', key: 'category', width: 120 },
-  { title: '画像', key: 'image', width: 100 },
-  { title: '出品者', key: 'seller', width: 120 },
-  { title: '登録日', key: 'createdAt', width: 120 }
+  { title: 'ステータス', key: 'status', width: 120 },
+  { title: 'カテゴリ', key: 'category', width: 140 },
+  { title: '画像', key: 'image', width: 100, sortable: false },
+  { title: '出品者', key: 'seller', width: 140 },
+  { title: '登録日', key: 'createdAt', width: 180 },
+  { title: '操作', key: 'actions', width: 120, sortable: false }
 ]
 
 const items = ref<Item[]>([])
@@ -118,16 +136,27 @@ const mapApiToItem = (api: ApiItem): Item => ({
   updatedAt: api.updated_at
 })
 
-const statusText = (s: string) =>
-  ({ active: 'アクティブ', sold: '売却済み', removed: '削除済み' }[s] || s)
-const statusColor = (s: string) =>
-  ({ active: 'success', sold: 'warning', removed: 'error' }[s] || 'default')
+const statusText = (s: string) => {
+  return {
+    active: 'アクティブ',
+    sold: '売却済み',
+    removed: '削除済み'
+  }[s] || s
+}
+
+const statusColor = (s: string) => {
+  return {
+    active: 'success',
+    sold: 'warning',
+    removed: 'error'
+  }[s] || 'default'
+}
 
 const fetchItems = async () => {
   isLoading.value = true
   errorMessage.value = ''
+
   try {
-    // #region agent log
     debugLog({
       hypothesisId: 'H3',
       location: 'admin/src/pages/items.vue:fetchItems',
@@ -138,17 +167,18 @@ const fetchItems = async () => {
         url: `${apiBase}/admin/v1/items`
       }
     })
-    // #endregion
+
     const data = await $fetch<ApiItem[]>(`${apiBase}/admin/v1/items`, {
       headers: {
         ...authStore.authHeaders,
         Accept: 'application/json'
       }
     })
+
     items.value = data.map(mapApiToItem)
   } catch (e) {
     console.error(e)
-    // #region agent log
+
     debugLog({
       hypothesisId: 'H3_H4',
       location: 'admin/src/pages/items.vue:fetchItems:catch',
@@ -160,7 +190,7 @@ const fetchItems = async () => {
         errorStatus: (e as any)?.status || null
       }
     })
-    // #endregion
+
     errorMessage.value = '商品一覧の取得に失敗しました。'
   } finally {
     isLoading.value = false
@@ -192,7 +222,7 @@ const deleteItem = async () => {
       }
     })
 
-    deleteDialog.value = false
+    closeDeleteDialog()
     await fetchItems()
   } catch (e: any) {
     console.error('Failed to delete item:', e)
