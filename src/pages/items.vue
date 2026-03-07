@@ -16,7 +16,8 @@
           :headers="headers"
           :items="items"
           :loading="isLoading"
-          :show-actions="false"
+          :show-actions="true"
+          @delete="openDeleteDialog"
         >
           <template #[`item.price`]="{ item }">
             ¥{{ Number(item.price).toLocaleString() }}
@@ -37,6 +38,28 @@
         </DataTable>
       </v-col>
     </v-row>
+
+    <v-dialog v-model="deleteDialog" max-width="420">
+      <v-card>
+        <v-card-title>商品削除</v-card-title>
+        <v-card-text>
+          <p class="mb-2">
+            「{{ deleteTarget?.title }}」を削除しますか？
+          </p>
+          <p class="text-caption text-medium-emphasis">
+            この操作は元に戻せません。
+          </p>
+        </v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn variant="text" :disabled="isLoading" @click="closeDeleteDialog">
+            キャンセル
+          </v-btn>
+          <v-btn color="error" :loading="isLoading" @click="deleteItem">
+            削除
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </AdminLayout>
 </template>
 
@@ -78,6 +101,9 @@ const headers = [
 const items = ref<Item[]>([])
 const isLoading = ref(false)
 const errorMessage = ref('')
+
+const deleteDialog = ref(false)
+const deleteTarget = ref<Item | null>(null)
 
 const mapApiToItem = (api: ApiItem): Item => ({
   id: api.id,
@@ -136,6 +162,41 @@ const fetchItems = async () => {
     })
     // #endregion
     errorMessage.value = '商品一覧の取得に失敗しました。'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const openDeleteDialog = (item: Item) => {
+  deleteTarget.value = item
+  deleteDialog.value = true
+}
+
+const closeDeleteDialog = () => {
+  deleteDialog.value = false
+  deleteTarget.value = null
+}
+
+const deleteItem = async () => {
+  if (!deleteTarget.value) return
+
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    await $fetch(`${apiBase}/admin/v1/items/${deleteTarget.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        ...authStore.authHeaders,
+        Accept: 'application/json'
+      }
+    })
+
+    deleteDialog.value = false
+    await fetchItems()
+  } catch (e: any) {
+    console.error('Failed to delete item:', e)
+    errorMessage.value = e?.data?.error || '商品の削除に失敗しました。'
   } finally {
     isLoading.value = false
   }
