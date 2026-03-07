@@ -12,7 +12,7 @@
             </v-card-title>
 
             <!-- フォーム -->
-            <v-card-text class="pa-8 mt-4">
+            <v-card-text class="pa-8 mt-7">
               <v-form @submit.prevent="handleLogin">
                 <v-text-field
                   v-model="form.email"
@@ -41,11 +41,11 @@
                   @keyup.enter="handleLogin"
                 />
 
-                <v-checkbox
+                <!-- <v-checkbox
                   v-model="form.rememberMe"
                   label="このデバイスで自動ログイン"
                   class="mb-6"
-                />
+                /> -->
 
                 <v-btn
                   type="submit"
@@ -73,8 +73,8 @@
               <v-card class="bg-blue-50 border" flat>
                 <v-card-text class="text-caption">
                   <p class="font-semibold mb-2">デモログイン情報:</p>
-                  <p><strong>メール:</strong> 現在未公開</p>
-                  <p><strong>パス:</strong> 現在未公開</p>
+                  <p><strong>メール:</strong>admin@example.com</p>
+                  <p><strong>パス:</strong>admin123</p>
                 </v-card-text>
               </v-card>
             </v-card-text>

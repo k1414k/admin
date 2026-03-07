@@ -87,7 +87,11 @@
             <div v-if="isEditMode && currentCategory?.imageUrl" class="mt-2">
               <div class="text-caption mb-1">現在の画像</div>
               <v-avatar size="56">
-                <v-img :src="currentCategory.imageUrl" alt="current category image" cover />
+                <v-img
+                  :src="currentCategory.imageUrl"
+                  alt="current category image"
+                  cover
+                />
               </v-avatar>
             </div>
           </v-form>
@@ -150,7 +154,7 @@ const apiBase = config.public.apiBase as string
 const headers = [
   { title: 'ID', key: 'id', width: 80 },
   { title: 'カテゴリ名', key: 'name' },
-  { title: '画像', key: 'image', width: 120 },
+  { title: '画像', key: 'image', width: 120, sortable: false },
   { title: '登録日', key: 'createdAt', width: 140 },
   { title: '操作', key: 'actions', sortable: false, width: 160 }
 ]
@@ -170,7 +174,7 @@ const deleteTarget = ref<Category | null>(null)
 
 const form = ref<{
   name: string
-  imageFile: File | null
+  imageFile: File | File[] | null
 }>({
   name: '',
   imageFile: null
@@ -179,6 +183,10 @@ const form = ref<{
 const clearMessages = () => {
   errorMessage.value = ''
   successMessage.value = ''
+}
+
+const clearError = () => {
+  errorMessage.value = ''
 }
 
 const formatDate = (dateString: string) => {
@@ -196,9 +204,15 @@ const mapApiToCategory = (api: ApiCategory): Category => ({
   updatedAt: api.updated_at
 })
 
+const normalizeFile = (fileInput: File | File[] | null): File | null => {
+  if (!fileInput) return null
+  if (Array.isArray(fileInput)) return fileInput[0] ?? null
+  return fileInput
+}
+
 const fetchCategories = async () => {
   isLoading.value = true
-  clearMessages()
+  clearError()
 
   try {
     const data = await $fetch<ApiCategory[]>(`${apiBase}/admin/v1/categories`, {
@@ -207,7 +221,9 @@ const fetchCategories = async () => {
         Accept: 'application/json'
       }
     })
+
     categories.value = data.map(mapApiToCategory)
+    console.log('fetched categories:', categories.value)
   } catch (error: any) {
     console.error('Failed to fetch categories:', error)
     errorMessage.value = error?.data?.error ?? 'カテゴリ一覧の取得に失敗しました。'
@@ -242,33 +258,40 @@ const openEditDialog = (category: Category) => {
 const closeDialog = () => {
   dialog.value = false
   currentCategory.value = null
+  form.value = {
+    name: '',
+    imageFile: null
+  }
 }
 
 const buildFormData = () => {
   const fd = new FormData()
-  fd.append('category[name]', form.value.name)
+  fd.append('category[name]', form.value.name.trim())
 
-  if (form.value.imageFile) {
-    fd.append('category[image]', form.value.imageFile)
+  const file = normalizeFile(form.value.imageFile)
+  if (file) {
+    fd.append('category[image]', file)
   }
 
   return fd
 }
 
 const submit = async () => {
-  if (!form.value.name) {
+  if (!form.value.name.trim()) {
     errorMessage.value = 'カテゴリ名を入力してください。'
     return
   }
 
   isSubmitting.value = true
-  clearMessages()
+  errorMessage.value = ''
 
   try {
     const body = buildFormData()
-    const url = isEditMode.value && currentCategory.value
-      ? `${apiBase}/admin/v1/categories/${currentCategory.value.id}`
-      : `${apiBase}/admin/v1/categories`
+
+    const url =
+      isEditMode.value && currentCategory.value
+        ? `${apiBase}/admin/v1/categories/${currentCategory.value.id}`
+        : `${apiBase}/admin/v1/categories`
 
     const method = isEditMode.value ? 'PATCH' : 'POST'
 
@@ -281,9 +304,11 @@ const submit = async () => {
       }
     })
 
-    successMessage.value = isEditMode.value ? 'カテゴリを更新しました。' : 'カテゴリを作成しました。'
     dialog.value = false
     await fetchCategories()
+    successMessage.value = isEditMode.value
+      ? 'カテゴリを更新しました。'
+      : 'カテゴリを作成しました。'
   } catch (error: any) {
     console.error('Failed to submit category:', error)
     errorMessage.value =
@@ -310,7 +335,7 @@ const deleteCategory = async () => {
   if (!deleteTarget.value) return
 
   isSubmitting.value = true
-  clearMessages()
+  errorMessage.value = ''
 
   try {
     await $fetch(`${apiBase}/admin/v1/categories/${deleteTarget.value.id}`, {
@@ -321,9 +346,10 @@ const deleteCategory = async () => {
       }
     })
 
-    successMessage.value = 'カテゴリを削除しました。'
     deleteDialog.value = false
+    deleteTarget.value = null
     await fetchCategories()
+    successMessage.value = 'カテゴリを削除しました。'
   } catch (error: any) {
     console.error('Failed to delete category:', error)
     errorMessage.value =
@@ -337,4 +363,3 @@ const deleteCategory = async () => {
 
 onMounted(fetchCategories)
 </script>
-

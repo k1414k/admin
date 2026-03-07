@@ -33,9 +33,4 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: 'mdi-cart-outline',
     to: '/orders'
   },
-  {
-    title: '設定',
-    icon: 'mdi-sliders-vertical',
-    to: '/settings'
-  }
 ];
